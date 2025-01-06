@@ -61,7 +61,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useDiaryStore } from '@/stores/diary'
-import { formatTimeString } from '@/utils/date'
+import { formatTimeString } from '../utils/date'
 
 const store = useDiaryStore()
 

@@ -8,5 +8,7 @@
   "github": {
     "enabled": true,
     "silent": true
-  }
+  },
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist"
 } 

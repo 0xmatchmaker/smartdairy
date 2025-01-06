@@ -11,7 +11,8 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': resolve(__dirname, 'src')
-      }
+      },
+      extensions: ['.js', '.ts', '.vue']
     },
     define: {
       __APP_VERSION__: JSON.stringify(env.VITE_APP_VERSION),
