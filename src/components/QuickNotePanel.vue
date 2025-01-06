@@ -87,6 +87,7 @@ import { ref } from 'vue'
 import { useDiaryStore } from '@/stores/diaryStore'
 import type { QuickNote } from '@/types/diary'
 import { showSuccessToast } from 'vant'
+import { useDebounceFn } from '@vueuse/core'
 
 const props = defineProps<{
   modelValue: boolean
@@ -130,7 +131,7 @@ const stopRecording = () => {
 }
 
 // 保存笔记
-const saveNote = () => {
+const saveNote = useDebounceFn(() => {
   const newNote: QuickNote = {
     id: Date.now().toString(),
     content: noteContent.value,
@@ -142,7 +143,7 @@ const saveNote = () => {
   store.addQuickNote(newNote)
   showSuccessToast('保存成功')
   onClose()
-}
+}, 300)
 
 // 关闭面板
 const onClose = () => {
