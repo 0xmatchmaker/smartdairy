@@ -31,119 +31,50 @@ interface DiaryEntry {
 
 export const useDiaryStore = defineStore('diary', {
   state: () => ({
-    timelineEvents: [] as TimelineEvent[],
+    dreams: [] as Dream[],
     diaryEntries: [] as DiaryEntry[],
-    dreams: [
-      { 
-        id: '1', 
-        title: '学习编程', 
-        status: 'pending', 
-        dailyGoalMinutes: 120,
-        accumulatedSeconds: 0 
-      },
-      { 
-        id: '2', 
-        title: '健身计划', 
-        status: 'pending', 
-        dailyGoalMinutes: 60,
-        accumulatedSeconds: 0 
-      },
-      { 
-        id: '3', 
-        title: '阅读', 
-        status: 'pending', 
-        dailyGoalMinutes: 30,
-        accumulatedSeconds: 0 
-      },
-      { 
-        id: '4', 
-        title: '写作', 
-        status: 'pending', 
-        dailyGoalMinutes: 45,
-        accumulatedSeconds: 0 
-      }
-    ] as Dream[],
-    syncing: false,
-    lastSyncTime: null as string | null,
-    syncError: null as string | null
   }),
 
-  getters: {
-    getTodayEvents: (state) => () => {
-      const today = new Date().toISOString().split('T')[0]
-      return state.timelineEvents.filter(event => event.time.startsWith(today))
-    },
-    
-    getActiveDreams: (state) => {
-      return state.dreams
-    }
-  },
-
   actions: {
-    // 初始化
     async init() {
-      // 确保有加密密钥
-      let key = encryption.getKey()
-      if (!key) {
-        key = encryption.generateKey()
-        encryption.saveKey(key)
-      }
-      db.setEncryptionKey(key)
-      
-      // 加载今日数据
-      const today = new Date().toISOString().split('T')[0]
-      const [events, entries] = await Promise.all([
-        db.getTimelineEvents(today),
-        db.getDiaryEntries(today)
+      // 从 IndexedDB 加载数据
+      const [dreams, entries] = await Promise.all([
+        db.getDreams(),
+        db.getEntries()
       ])
-      
-      this.timelineEvents = events
-      this.diaryEntries = entries
+
+      // 如果没有梦想数据，初始化默认数据
+      if (!dreams || dreams.length === 0) {
+        const defaultDreams = [
+          { 
+            id: '1', 
+            title: '学习编程', 
+            dailyGoalMinutes: 120,
+            accumulatedSeconds: 0 
+          },
+          // ... 其他默认梦想
+        ]
+        
+        await Promise.all(defaultDreams.map(dream => db.saveDream(dream)))
+        this.dreams = defaultDreams
+      } else {
+        this.dreams = dreams
+      }
+
+      this.diaryEntries = entries || []
     },
 
-    // 添加时间轴事件
-    async addTimelineEvent(event) {
-      await db.addTimelineEvent(event)
-      this.timelineEvents.push(event)
+    async updateDreamProgress(dreamId: string, seconds: number) {
+      const dream = this.dreams.find(d => d.id === dreamId)
+      if (dream) {
+        dream.accumulatedSeconds = (dream.accumulatedSeconds || 0) + seconds
+        await db.saveDream(dream)
+      }
     },
 
-    // 添加日记条目
-    async addDiaryEntry(entry) {
-      await db.addDiaryEntry(entry)
+    async addDiaryEntry(entry: DiaryEntry) {
+      await db.addEntry(entry)
       this.diaryEntries.push(entry)
-    },
-
-    // 更新梦想状态
-    updateDream(dreamId: string, updates: Partial<Dream>) {
-      const index = this.dreams.findIndex(d => d.id === dreamId)
-      if (index > -1) {
-        this.dreams[index] = { ...this.dreams[index], ...updates }
-      }
-    },
-
-    async syncData() {
-      if (this.syncing) return
-      
-      this.syncing = true
-      this.syncError = null
-      
-      try {
-        const { success, error } = await db.sync()
-        
-        if (!success) {
-          throw error
-        }
-        
-        // 重新加载数据
-        await this.init()
-        
-        this.lastSyncTime = new Date().toISOString()
-      } catch (error) {
-        console.error('Sync failed:', error)
-        this.syncError = error.message
-      } finally {
-        this.syncing = false
-      }
     }
   }
 }) 
