@@ -1,5 +1,18 @@
-# Vue 3 + TypeScript + Vite
+# Smart Diary
+这是一个基于 Vue 3 + Vant 的智能日记应用展示版本。
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## 功能特点
+- 💡 智能时间追踪
+- 📝 快速记录感受
+- 🎯 目标进度管理
+- 🔒 数据本地存储
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## 技术栈
+- Vue 3 + TypeScript
+- Vant UI
+- IndexedDB
+- Pinia
+
+## 在线预览
+[Demo Link](https://smartdairy.vercel.app/#/diary)
+
