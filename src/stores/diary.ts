@@ -24,9 +24,10 @@ interface TimelineEvent {
 interface DiaryEntry {
   id: string
   type: string
-  title: string
   content: string
   timestamp: string
+  dreamId?: string
+  relatedThoughts?: string
 }
 
 export const useDiaryStore = defineStore('diary', {
@@ -35,8 +36,15 @@ export const useDiaryStore = defineStore('diary', {
     diaryEntries: [] as DiaryEntry[],
   }),
 
+  getters: {
+    // 添加 getter 以确保组件可以访问数据
+    getActiveDreams: (state) => state.dreams,
+    getDiaryEntries: (state) => state.diaryEntries
+  },
+
   actions: {
     async init() {
+      console.log('Initializing store...') // 添加日志
       // 从 IndexedDB 加载数据
       const [dreams, entries] = await Promise.all([
         db.getDreams(),
@@ -52,16 +60,53 @@ export const useDiaryStore = defineStore('diary', {
             dailyGoalMinutes: 120,
             accumulatedSeconds: 0 
           },
-          // ... 其他默认梦想
+          { 
+            id: '2', 
+            title: '健身计划', 
+            dailyGoalMinutes: 60,
+            accumulatedSeconds: 0 
+          },
+          { 
+            id: '3', 
+            title: '阅读', 
+            dailyGoalMinutes: 30,
+            accumulatedSeconds: 0 
+          },
+          { 
+            id: '4', 
+            title: '写作', 
+            dailyGoalMinutes: 45,
+            accumulatedSeconds: 0 
+          }
         ]
         
         await Promise.all(defaultDreams.map(dream => db.saveDream(dream)))
         this.dreams = defaultDreams
+
+        // 添加一些测试日记条目
+        const testEntries = [
+          {
+            id: Date.now().toString(),
+            type: 'quick_note',
+            content: '开始使用智能日记！',
+            timestamp: new Date().toISOString()
+          },
+          {
+            id: (Date.now() + 1).toString(),
+            type: 'dream_note',
+            content: '今天学习了Vue 3的基础知识',
+            dreamId: '1',
+            relatedThoughts: '学习编程',
+            timestamp: new Date().toISOString()
+          }
+        ]
+
+        await Promise.all(testEntries.map(entry => db.addEntry(entry)))
+        this.diaryEntries = testEntries
       } else {
         this.dreams = dreams
+        this.diaryEntries = entries || []
       }
-
-      this.diaryEntries = entries || []
     },
 
     async updateDreamProgress(dreamId: string, seconds: number) {

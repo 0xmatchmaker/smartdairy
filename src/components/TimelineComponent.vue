@@ -2,77 +2,81 @@
   <div class="timeline-component">
     <van-empty v-if="!timelineItems.length" description="今天还没有记录" />
     
-    <van-timeline v-else>
+    <div v-else class="timeline">
       <!-- 今日目标完成度 -->
-      <van-timeline-item>
-        <template #content>
-          <div class="daily-summary">
-            <h3>今日目标完成度</h3>
-            <div class="goals-grid">
-              <div 
-                v-for="dream in dreams" 
-                :key="dream.id" 
-                class="goal-card"
-              >
-                <span class="goal-title">{{ dream.title }}</span>
-                <van-progress 
-                  :percentage="calculateProgress(dream)"
-                  :color="getProgressColor(dream)"
-                />
-                <span class="goal-time">
-                  {{ formatTime(dream.accumulatedSeconds) }}/
-                  {{ dream.dailyGoalMinutes }}分钟
-                </span>
-              </div>
+      <div class="timeline-item">
+        <div class="daily-summary">
+          <h3>今日目标完成度</h3>
+          <div class="goals-grid">
+            <div 
+              v-for="dream in dreams" 
+              :key="dream.id" 
+              class="goal-card"
+            >
+              <span class="goal-title">{{ dream.title }}</span>
+              <van-progress 
+                :percentage="calculateProgress(dream)"
+                :color="getProgressColor(dream)"
+              />
+              <span class="goal-time">
+                {{ formatTime(dream.accumulatedSeconds) }}/
+                {{ dream.dailyGoalMinutes }}分钟
+              </span>
             </div>
           </div>
-        </template>
-      </van-timeline-item>
+        </div>
+      </div>
 
       <!-- 时间轴条目 -->
-      <van-timeline-item 
+      <div 
         v-for="item in timelineItems" 
         :key="item.id"
+        class="timeline-item"
       >
-        <template #dot>
+        <div class="timeline-dot">
           <van-icon 
             :name="getItemIcon(item.type)"
             :color="getItemColor(item.type)"
           />
-        </template>
-        <template #content>
-          <div class="timeline-item">
-            <span class="time">{{ formatTimeString(item.timestamp) }}</span>
-            <div class="content">
-              <h4>{{ getItemTitle(item) }}</h4>
-              <p>{{ item.content }}</p>
-              <van-tag 
-                v-if="item.relatedThoughts"
-                type="primary" 
-                size="medium"
-              >
-                关联：{{ item.relatedThoughts }}
-              </van-tag>
-            </div>
+        </div>
+        <div class="timeline-content">
+          <span class="time">{{ formatTimeString(item.timestamp) }}</span>
+          <div class="content">
+            <h4>{{ getItemTitle(item) }}</h4>
+            <p>{{ item.content }}</p>
+            <van-tag 
+              v-if="item.relatedThoughts"
+              type="primary" 
+              size="medium"
+            >
+              关联：{{ item.relatedThoughts }}
+            </van-tag>
           </div>
-        </template>
-      </van-timeline-item>
-    </van-timeline>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useDiaryStore } from '@/stores/diary'
 import { formatTimeString } from '@/utils/date'
 
 const store = useDiaryStore()
-const dreams = computed(() => store.dreams)
+
+// 添加日志
+onMounted(() => {
+  console.log('Timeline mounted, entries:', store.diaryEntries)
+})
 
 const timelineItems = computed(() => {
+  console.log('Computing timeline items:', store.diaryEntries) // 添加日志
   return store.diaryEntries
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
 })
+
+const dreams = computed(() => store.dreams)
 
 function calculateProgress(dream: any) {
   const goalSeconds = dream.dailyGoalMinutes * 60
@@ -119,6 +123,47 @@ function getItemTitle(item: any) {
 <style scoped lang="scss">
 .timeline-component {
   padding: 16px;
+}
+
+.timeline {
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: 16px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #ebedf0;
+  }
+}
+
+.timeline-item {
+  position: relative;
+  padding-left: 40px;
+  margin-bottom: 20px;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: 8px;
+  top: 0;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.timeline-content {
+  background: #fff;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .daily-summary {

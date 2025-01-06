@@ -15,11 +15,12 @@ class IndexedDBStorage implements StorageProvider {
   private readonly DB_VERSION = 1
 
   async init() {
+    console.log('Initializing IndexedDB...')
     if (this.db) return
 
     this.db = await openDB(this.DB_NAME, this.DB_VERSION, {
       upgrade(db) {
-        // 创建所需的对象仓库
+        console.log('Upgrading database...')
         if (!db.objectStoreNames.contains('dreams')) {
           db.createObjectStore('dreams', { keyPath: 'id' })
         }
@@ -38,7 +39,9 @@ class IndexedDBStorage implements StorageProvider {
 
   async getDreams() {
     await this.init()
-    return this.db.getAll('dreams')
+    const dreams = await this.db.getAll('dreams')
+    console.log('Retrieved dreams:', dreams)
+    return dreams
   }
 
   // 日记条目相关操作
@@ -49,7 +52,9 @@ class IndexedDBStorage implements StorageProvider {
 
   async getEntries() {
     await this.init()
-    return this.db.getAll('diary_entries')
+    const entries = await this.db.getAll('diary_entries')
+    console.log('Retrieved entries:', entries)
+    return entries
   }
 
   // 清除所有数据（用于测试）
