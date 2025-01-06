@@ -79,6 +79,8 @@ import TimelineComponent from '@/components/TimelineComponent.vue'
 import CoreFocusComponent from '@/components/CoreFocusComponent.vue'
 import DreamsComponent from '@/components/DreamsComponent.vue'
 import QuickNotePanel from '@/components/QuickNotePanel.vue'
+import { keyManager } from '@/services/key-manager'
+import { encryption } from '@/services/encryption'
 
 const router = useRouter()
 const store = useDiaryStore()
@@ -128,6 +130,21 @@ const getProgressColor = (dream: any) => {
 const goToHistory = () => {
   router.push('/history')
 }
+
+function decryptContent(entry: DiaryEntry): DiaryEntry {
+  const password = keyManager.getPassword()
+  if (entry.encrypted && password) {
+    return {
+      ...entry,
+      content: encryption.decrypt(entry.content, password)
+    }
+  }
+  return entry
+}
+
+const entries = computed(() => {
+  return diaryEntries.value.map(decryptContent)
+})
 </script>
 
 <style scoped lang="scss">

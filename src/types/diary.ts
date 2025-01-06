@@ -33,4 +33,12 @@ export interface QuickNote {
   type: 'voice' | 'text' | 'template';
   tags: string[];
   createdAt: string;
+}
+
+export interface DiaryEntry {
+  id: string
+  type: string
+  content: string
+  timestamp: string
+  encrypted?: boolean
 } 

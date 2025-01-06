@@ -1,4 +1,6 @@
 import { defineStore } from 'pinia'
+import { db } from '@/services/db'
+import { encryption } from '@/services/encryption'
 
 interface Dream {
   id: string
@@ -60,7 +62,10 @@ export const useDiaryStore = defineStore('diary', {
         dailyGoalMinutes: 45,
         accumulatedSeconds: 0 
       }
-    ] as Dream[]
+    ] as Dream[],
+    syncing: false,
+    lastSyncTime: null as string | null,
+    syncError: null as string | null
   }),
 
   getters: {
@@ -75,13 +80,36 @@ export const useDiaryStore = defineStore('diary', {
   },
 
   actions: {
+    // 初始化
+    async init() {
+      // 确保有加密密钥
+      let key = encryption.getKey()
+      if (!key) {
+        key = encryption.generateKey()
+        encryption.saveKey(key)
+      }
+      db.setEncryptionKey(key)
+      
+      // 加载今日数据
+      const today = new Date().toISOString().split('T')[0]
+      const [events, entries] = await Promise.all([
+        db.getTimelineEvents(today),
+        db.getDiaryEntries(today)
+      ])
+      
+      this.timelineEvents = events
+      this.diaryEntries = entries
+    },
+
     // 添加时间轴事件
-    addTimelineEvent(event: TimelineEvent) {
+    async addTimelineEvent(event) {
+      await db.addTimelineEvent(event)
       this.timelineEvents.push(event)
     },
 
     // 添加日记条目
-    addDiaryEntry(entry: DiaryEntry) {
+    async addDiaryEntry(entry) {
+      await db.addDiaryEntry(entry)
       this.diaryEntries.push(entry)
     },
 
@@ -90,6 +118,31 @@ export const useDiaryStore = defineStore('diary', {
       const index = this.dreams.findIndex(d => d.id === dreamId)
       if (index > -1) {
         this.dreams[index] = { ...this.dreams[index], ...updates }
+      }
+    },
+
+    async syncData() {
+      if (this.syncing) return
+      
+      this.syncing = true
+      this.syncError = null
+      
+      try {
+        const { success, error } = await db.sync()
+        
+        if (!success) {
+          throw error
+        }
+        
+        // 重新加载数据
+        await this.init()
+        
+        this.lastSyncTime = new Date().toISOString()
+      } catch (error) {
+        console.error('Sync failed:', error)
+        this.syncError = error.message
+      } finally {
+        this.syncing = false
       }
     }
   }

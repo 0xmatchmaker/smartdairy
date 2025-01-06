@@ -84,10 +84,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useDiaryStore } from '@/stores/diaryStore'
-import type { QuickNote } from '@/types/diary'
-import { showSuccessToast } from 'vant'
-import { useDebounceFn } from '@vueuse/core'
+import { showToast } from 'vant'
+import { db } from '@/services/db'
+import { keyManager } from '@/services/key-manager'
+import { encryption } from '@/services/encryption'
 
 const props = defineProps<{
   modelValue: boolean
@@ -97,7 +97,39 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
 }>()
 
-const store = useDiaryStore()
+const content = ref('')
+
+async function handleSubmit() {
+  if (!content.value.trim()) {
+    showToast('请输入内容')
+    return
+  }
+
+  const timestamp = new Date().toISOString()
+  const entry = {
+    id: timestamp,
+    type: 'note',
+    content: content.value,
+    timestamp,
+    encrypted: false
+  }
+
+  // 如果设置了密码，则加密内容
+  const password = keyManager.getPassword()
+  if (password) {
+    entry.content = encryption.encrypt(entry.content, password)
+    entry.encrypted = true
+  }
+
+  try {
+    await db.addDiaryEntry(entry)
+    showToast('保存成功')
+    content.value = ''
+  } catch (error) {
+    console.error('Failed to save note:', error)
+    showToast('保存失败')
+  }
+}
 
 // 记录相关状态
 const noteType = ref<'text' | 'voice' | 'template'>('text')
@@ -131,19 +163,9 @@ const stopRecording = () => {
 }
 
 // 保存笔记
-const saveNote = useDebounceFn(() => {
-  const newNote: QuickNote = {
-    id: Date.now().toString(),
-    content: noteContent.value,
-    type: noteType.value,
-    tags: tags.value.split(',').map(tag => tag.trim()).filter(Boolean),
-    createdAt: new Date().toISOString()
-  }
-
-  store.addQuickNote(newNote)
-  showSuccessToast('保存成功')
-  onClose()
-}, 300)
+const saveNote = () => {
+  handleSubmit()
+}
 
 // 关闭面板
 const onClose = () => {
