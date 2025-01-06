@@ -250,25 +250,18 @@ onMounted(() => {
       border-radius: 16px;
       
       &.pending {
-        background-color: #f2f3f5;
+        background: #f2f3f5;
         color: #666;
       }
       
       &.started {
-        background-color: #e8f3ff;
-        color: #1989fa;
-        animation: breathing 2s infinite;
-
-        .duration {
-          margin-left: 4px;
-          font-size: 12px;
-          opacity: 0.8;
-        }
+        background: #e8f8f2;
+        color: #07c160;
       }
       
       &.completed {
-        background-color: #e8f8f2;
-        color: #07c160;
+        background: #07c160;
+        color: white;
       }
 
       .van-icon {
