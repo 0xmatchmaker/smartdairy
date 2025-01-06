@@ -18,7 +18,11 @@ import {
   Cell,
   Toast,
   Empty,
-  Loading
+  Loading,
+  Tag,
+  Icon,
+  Dialog,
+  Notify
 } from 'vant'
 
 const app = createApp(App)
@@ -36,7 +40,11 @@ const vantComponents = [
   Cell,
   Toast,
   Empty,
-  Loading
+  Loading,
+  Tag,
+  Icon,
+  Dialog,
+  Notify
 ]
 
 vantComponents.forEach(component => {

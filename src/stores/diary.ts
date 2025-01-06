@@ -1,17 +1,26 @@
 import { defineStore } from 'pinia'
 
+interface DiaryEntry {
+  id: string
+  type: 'health' | 'note' | 'custom'
+  title: string
+  content: string
+  timestamp: string
+}
+
 interface TimelineEvent {
   id: string
   time: string
   title: string
-  type: 'preset' | 'custom'
+  type: 'preset' | 'custom' | 'health'
+  category?: 'health-task-start' | 'health-task-complete'
   note?: string
 }
 
 export const useDiaryStore = defineStore('diary', {
   state: () => ({
     timelineEvents: [] as TimelineEvent[],
-    diaryEntries: [],
+    diaryEntries: [] as DiaryEntry[],
     quickNotes: [],
     settings: {}
   }),
@@ -40,6 +49,16 @@ export const useDiaryStore = defineStore('diary', {
       if (index > -1) {
         this.timelineEvents[index] = event
       }
+    },
+
+    addDiaryEntry(entry: DiaryEntry) {
+      this.diaryEntries.push(entry)
+    },
+
+    getDailyEntries(date: string) {
+      return this.diaryEntries.filter(entry => 
+        entry.timestamp.startsWith(date)
+      )
     }
   }
 }) 
