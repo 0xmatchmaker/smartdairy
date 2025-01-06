@@ -61,9 +61,15 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useDiaryStore } from '@/stores/diary'
-import { formatTimeString } from '../utils/date'
 
 const store = useDiaryStore()
+
+function formatTimeString(timestamp: string) {
+  const date = new Date(timestamp)
+  const hours = date.getHours().toString().padStart(2, '0')
+  const minutes = date.getMinutes().toString().padStart(2, '0')
+  return `${hours}:${minutes}`
+}
 
 // 添加日志
 onMounted(() => {
@@ -71,7 +77,7 @@ onMounted(() => {
 })
 
 const timelineItems = computed(() => {
-  console.log('Computing timeline items:', store.diaryEntries) // 添加日志
+  console.log('Computing timeline items:', store.diaryEntries)
   return store.diaryEntries
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
 })
